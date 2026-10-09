@@ -1,14 +1,14 @@
 [
     {
-        "nombre": "Luna Celeste",
-        "apellido": "Ruiz Baleani",
         "dni": "37153607",
-        "telefono": "3476616745",
-        "mes_inscripcion": "Febrero",
-        "actividad": "Kayak",
-        "certificado": "No corresponde",
-        "valor_seguro": 40000,
-        "fecha_pago_seguro": "02/10/2026",
-        "vencimiento_seguro": "02/04/2027"
+        "nombre": "Luna",
+        "apellido": "Ruiz B",
+        "fecha_de_nacimiento": "16/01/1993",
+        "clase": "Kayak",
+        "apto_medico": false,
+        "estado": "Activo",
+        "cuota_al_dia": false,
+        "mes_abonado": "Enero",
+        "dia_pago": 2
     }
 ]

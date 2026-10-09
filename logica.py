@@ -1,61 +1,58 @@
-import calendar
-from datetime import date
+import json
+import os
+from fpdf import FPDF
+from datos import Socio
 
-VALOR_SEGURO = 40000
-MESES_REEMPLAZO = ["Junio", "Julio", "Agosto"]
+DIRECTORIO_ACTUAL = os.path.dirname(os.path.abspath(__file__))
+RUTA_JSON = os.path.join(DIRECTORIO_ACTUAL, "clientes.json")
+RUTA_PDF = os.path.join(DIRECTORIO_ACTUAL, "reporte_socios.pdf")
 
-
-def determinar_actividad(mes):
-    """Devuelve la actividad según el mes."""
-    if mes in MESES_REEMPLAZO:
-        return "Natación"
-    return "Kayak"
-
-
-def certificado_es_obligatorio(mes):
-    """Indica si el certificado médico es obligatorio."""
-    return mes in MESES_REEMPLAZO
-
-
-def sumar_tres_meses(fecha):
-    """Suma tres meses a una fecha."""
-    nuevo_mes = fecha.month + 3
-    nuevo_anio = fecha.year + (nuevo_mes - 1) // 12
-    nuevo_mes = (nuevo_mes - 1) % 12 + 1
-
-    ultimo_dia = calendar.monthrange(nuevo_anio, nuevo_mes)[1]
-    nuevo_dia = min(fecha.day, ultimo_dia)
-
-    return date(nuevo_anio, nuevo_mes, nuevo_dia)
-
-
-def convertir_fecha(texto):
-    """Convierte DD/MM/AAAA en un objeto de tipo date."""
+def cargar_socios():
     try:
-        dia, mes, anio = texto.split("/")
-        return date(int(anio), int(mes), int(dia))
-    except Exception:
-        return None
+        with open(RUTA_JSON, "r", encoding="utf-8") as f:
+            datos = json.load(f)
+            return [Socio(**d) for d in datos]
+    except FileNotFoundError:
+        return []
 
+def guardar_socios(socios):
+    with open(RUTA_JSON, "w", encoding="utf-8") as f:
+        json.dump([s.to_dict() for s in socios], f, indent=4)
 
-def calcular_vencimiento(fecha_pago):
-    """Calcula el vencimiento del seguro a 3 meses."""
-    return sumar_tres_meses(fecha_pago)
+def generar_reporte_pdf(socios):
+    pdf = FPDF(orientation="L")
+    pdf.add_page()
+    pdf.set_font("Helvetica", size=14)
+    pdf.cell(0, 10, "Reporte Detallado de Socios", ln=True, align="C")
+    pdf.set_font("Helvetica", size=9)
+    
+    pdf.cell(20, 10, "DNI", border=1)
+    pdf.cell(60, 10, "Apellido y Nombre", border=1)
+    pdf.cell(25, 10, "F. Nac", border=1)
+    pdf.cell(30, 10, "Clase", border=1)
+    pdf.cell(25, 10, "Apto Médico", border=1)
+    pdf.cell(30, 10, "Mes Abonado", border=1)
+    pdf.cell(30, 10, "Vencimiento", border=1, ln=True)
 
+    for s in socios:
+        if s.clase == "Natación":
+            apto = "Sí" if s.apto_medico else "Falta"
+        else:
+            apto = "No requiere"
 
-def obtener_estado_seguro(cliente):
-    """Devuelve Pendiente, Vigente o Vencido."""
-    vencimiento = cliente.get("vencimiento_seguro", "")
+        vencimiento = "Impago"
+        if s.mes_abonado:
+            vencimiento = "Al día" if s.dia_pago <= 10 else "Vencido"
 
-    if vencimiento == "":
-        return "Pendiente"
+        nombre_completo = f"{s.apellido}, {s.nombre}"
 
-    fecha_vencimiento = convertir_fecha(vencimiento)
-
-    if fecha_vencimiento is None:
-        return "Pendiente"
-
-    if fecha_vencimiento >= date.today():
-        return "Vigente"
-
-    return "Vencido"
+        pdf.cell(20, 10, str(s.dni), border=1)
+        pdf.cell(60, 10, nombre_completo, border=1)
+        pdf.cell(25, 10, str(s.nacimiento), border=1)
+        pdf.cell(30, 10, str(s.clase), border=1)
+        pdf.cell(25, 10, apto, border=1)
+        pdf.cell(30, 10, str(s.mes_abonado) if s.mes_abonado else "-", border=1)
+        pdf.cell(30, 10, vencimiento, border=1, ln=True)
+    
+    pdf.output(RUTA_PDF)
+    return RUTA_PDF

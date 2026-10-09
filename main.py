@@ -1,79 +1,44 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import ttk
+import pantalla_clientes
+import pantalla_renovacion
+import pantalla_estadisticas
 
-from datos import cargar_clientes, exportar_clientes, guardar_clientes
-from pantalla_clientes import abrir_pantalla_clientes
-from pantalla_estadisticas import abrir_pantalla_estadisticas
-from pantalla_renovacion import abrir_pantalla_renovacion
+root = tk.Tk()
+root.title("Sistema Kayak - Panel Principal")
+root.geometry("400x300")
+root.configure(bg="#f0f4f8")
 
-clientes = cargar_clientes()
+estilo = ttk.Style()
+estilo.theme_use("clam")
 
+menu_bar = tk.Menu(root)
+root.config(menu=menu_bar)
 
-def exportar_datos():
-    """Permite seleccionar dónde guardar una copia JSON."""
-    nombre_archivo = filedialog.asksaveasfilename(
-        title="Exportar clientes",
-        defaultextension=".json",
-        filetypes=[("Archivo JSON", "*.json")],
-    )
+# Menú Socios
+menu_socios = tk.Menu(menu_bar, tearoff=0)
+menu_socios.add_command(label="Nuevo Socio", command=lambda: pantalla_clientes.abrir(root))
+menu_bar.add_cascade(label="Socios", menu=menu_socios)
 
-    if nombre_archivo == "":
-        return
+# Menú Pagos
+menu_pagos = tk.Menu(menu_bar, tearoff=0)
+menu_pagos.add_command(label="Registrar Pago", command=lambda: pantalla_renovacion.abrir(root))
+menu_bar.add_cascade(label="Pagos", menu=menu_pagos)
 
-    exportar_clientes(clientes, nombre_archivo)
-    messagebox.showinfo(
-        "Exportación exitosa", "Los datos fueron exportados correctamente."
-    )
+# Menú Reportes
+menu_reportes = tk.Menu(menu_bar, tearoff=0)
+menu_reportes.add_command(label="Generar PDF", command=lambda: pantalla_estadisticas.abrir(root))
+menu_bar.add_cascade(label="Reportes", menu=menu_reportes)
 
+# Menú Sistema
+menu_sistema = tk.Menu(menu_bar, tearoff=0)
+menu_sistema.add_command(label="Salir", command=root.destroy)
+menu_bar.add_cascade(label="Sistema", menu=menu_sistema)
 
-def salir():
-    """Guarda los datos y cierra el programa."""
-    guardar_clientes(clientes)
-    ventana.destroy()
+ttk.Label(root, text="SISTEMA KAYAK / NATACIÓN", font=("Segoe UI", 14, "bold"), background="#f0f4f8").pack(pady=25)
 
+ttk.Button(root, text="Gestión de Socios", command=lambda: pantalla_clientes.abrir(root)).pack(fill="x", padx=60, pady=8)
+ttk.Button(root, text="Control de Pagos", command=lambda: pantalla_renovacion.abrir(root)).pack(fill="x", padx=60, pady=8)
+ttk.Button(root, text="Reportes PDF", command=lambda: pantalla_estadisticas.abrir(root)).pack(fill="x", padx=60, pady=8)
 
-ventana = tk.Tk()
-ventana.title("AquaGestión")
-ventana.geometry("500x500")
-ventana.resizable(False, False)
-
-tk.Label(
-    ventana, text="AquaGestión", font=("Arial", 26, "bold"), fg="darkblue"
-).pack(pady=20)
-
-tk.Label(
-    ventana, text="Escuela de kayak y natación", font=("Arial", 12)
-).pack(pady=5)
-
-tk.Button(
-    ventana,
-    text="Registrar cliente",
-    width=30,
-    command=lambda: abrir_pantalla_clientes(
-        ventana, clientes, guardar_clientes
-    ),
-).pack(pady=10)
-
-tk.Button(
-    ventana,
-    text="Renovar seguro",
-    width=30,
-    command=lambda: abrir_pantalla_renovacion(
-        ventana, clientes, guardar_clientes
-    ),
-).pack(pady=10)
-
-tk.Button(
-    ventana,
-    text="Ver estadísticas",
-    width=30,
-    command=lambda: abrir_pantalla_estadisticas(ventana, clientes),
-).pack(pady=10)
-
-tk.Button(
-    ventana, text="Exportar datos a JSON", width=30, command=exportar_datos
-).pack(pady=10)
-
-tk.Button(ventana, text="Salir", width=30, command=salir).pack(pady=10)
-
-ventana.mainloop()
+root.mainloop()

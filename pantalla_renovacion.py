@@ -1,77 +1,55 @@
 import tkinter as tk
-from datetime import date
-from tkinter import messagebox
+from tkinter import ttk, messagebox
+from logica import cargar_socios, guardar_socios
 
-from logica import VALOR_SEGURO, calcular_vencimiento, convertir_fecha
+def abrir(root):
+    ventana = tk.Toplevel(root)
+    ventana.title("Control de Pagos")
+    ventana.geometry("350x200")
 
+    ttk.Label(ventana, text="DNI del Socio:").grid(row=0, column=0, padx=10, pady=10, sticky="e")
+    entry_dni = ttk.Entry(ventana)
+    entry_dni.grid(row=0, column=1, padx=10, pady=10)
 
-def abrir_pantalla_renovacion(ventana_principal, clientes, guardar_datos):
-    """Abre la pantalla para renovar el seguro."""
-    ventana = tk.Toplevel(ventana_principal)
-    ventana.title("Renovar seguro")
-    ventana.geometry("400x350")
-    ventana.resizable(False, False)
+    ttk.Label(ventana, text="Mes a abonar:").grid(row=1, column=0, padx=10, pady=10, sticky="e")
+    meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+    combo_mes = ttk.Combobox(ventana, values=meses, state="readonly")
+    combo_mes.grid(row=1, column=1, padx=10, pady=10)
 
-    dni = tk.StringVar()
+    ttk.Label(ventana, text="Día de pago (1-31):").grid(row=2, column=0, padx=10, pady=10, sticky="e")
+    entry_dia = ttk.Entry(ventana)
+    entry_dia.grid(row=2, column=1, padx=10, pady=10)
 
-    tk.Label(
-        ventana, text="Renovación de seguro", font=("Arial", 18, "bold")
-    ).pack(pady=20)
-
-    tk.Label(ventana, text="DNI del cliente:").pack(pady=5)
-    tk.Entry(ventana, textvariable=dni, width=30).pack(pady=5)
-
-    tk.Label(
-        ventana,
-        text="Importe: $40.000\nDuración: 3 meses",
-        font=("Arial", 11),
-    ).pack(pady=20)
-
-    def renovar():
-        dni_buscado = dni.get().strip()
-
-        if dni_buscado == "":
-            messagebox.showwarning("Dato faltante", "Ingrese el DNI.")
+    def registrar_pago():
+        dni = entry_dni.get()
+        mes = combo_mes.get()
+        
+        if not dni or not mes or not entry_dia.get():
+            messagebox.showwarning("Error", "Completá todos los campos")
+            return
+            
+        try:
+            dia = int(entry_dia.get())
+        except ValueError:
+            messagebox.showerror("Error", "El día debe ser un número")
             return
 
-        cliente_encontrado = None
-
-        for cliente in clientes:
-            if cliente["dni"] == dni_buscado:
-                cliente_encontrado = cliente
+        socios = cargar_socios()
+        encontrado = False
+        
+        for s in socios:
+            if s.dni == dni:
+                s.mes_abonado = mes
+                s.dia_pago = dia
+                encontrado = True
                 break
-
-        if cliente_encontrado is None:
-            messagebox.showerror(
-                "Cliente inexistente", "No se encontró ese DNI."
-            )
-            return
-
-        hoy = date.today()
-        fecha_anterior = convertir_fecha(
-            cliente_encontrado.get("vencimiento_seguro", "")
-        )
-
-        if fecha_anterior is not None and fecha_anterior >= hoy:
-            nuevo_vencimiento = calcular_vencimiento(fecha_anterior)
+        
+        if encontrado:
+            guardar_socios(socios)
+            estado = "Al día" if dia <= 10 else "Vencido"
+            messagebox.showinfo("Éxito", f"Pago registrado.\nEstado de la cuota: {estado}")
+            ventana.destroy()
         else:
-            nuevo_vencimiento = calcular_vencimiento(hoy)
+            messagebox.showerror("Error", "Socio no encontrado")
 
-        cliente_encontrado["valor_seguro"] = VALOR_SEGURO
-        cliente_encontrado["fecha_pago_seguro"] = hoy.strftime("%d/%m/%Y")
-        cliente_encontrado["vencimiento_seguro"] = nuevo_vencimiento.strftime(
-            "%d/%m/%Y"
-        )
-
-        guardar_datos(clientes)
-
-        messagebox.showinfo(
-            "Renovación exitosa",
-            "El seguro fue renovado correctamente.\n"
-            f"Nuevo vencimiento: {cliente_encontrado['vencimiento_seguro']}",
-        )
-        ventana.destroy()
-
-    tk.Button(
-        ventana, text="Registrar renovación", width=25, command=renovar
-    ).pack(pady=15)
+    ttk.Button(ventana, text="Registrar Pago", command=registrar_pago).grid(row=3, column=0, columnspan=2, pady=10)
