@@ -5,10 +5,44 @@
         "apellido": "Ruiz B",
         "fecha_de_nacimiento": "16/01/1993",
         "clase": "Kayak",
+        "turno": "Tarde",
         "apto_medico": false,
         "estado": "Activo",
-        "cuota_al_dia": false,
-        "mes_abonado": "Enero",
-        "dia_pago": 2
+        "cuota_al_dia": true,
+        "mes_abonado": "10/2026",
+        "dia_pago": 9,
+        "periodo_abonado": "10/2026",
+        "fecha_pago": "09/10/2026",
+        "monto_ultimo_pago": 0.0,
+        "historial_pagos": [
+            {
+                "periodo": "10/2026",
+                "fecha_pago": "09/10/2026",
+                "monto": 15000.0
+            }
+        ]
+    },
+    {
+        "dni": "31234567",
+        "nombre": "Juan",
+        "apellido": "Perez",
+        "fecha_de_nacimiento": "01/02/2000",
+        "clase": "Kayak",
+        "turno": "Mañana",
+        "apto_medico": false,
+        "estado": "Activo",
+        "cuota_al_dia": true,
+        "mes_abonado": "10/2026",
+        "dia_pago": 9,
+        "periodo_abonado": "10/2026",
+        "fecha_pago": "09/10/2026",
+        "monto_ultimo_pago": 0.0,
+        "historial_pagos": [
+            {
+                "periodo": "10/2026",
+                "fecha_pago": "09/10/2026",
+                "monto": 15000.0
+            }
+        ]
     }
 ]
