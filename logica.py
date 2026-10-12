@@ -71,14 +71,23 @@ def eliminar_socio(dni, socios=None):
     Elimina al socio con el DNI indicado de la lista y guarda los cambios en JSON.
     Devuelve True si se eliminó con éxito, False si no se encontró.
     """
-    lista = socios if socios is not None else cargar_socios()
-    dni_limpio = str(dni).strip()
-    nueva_lista = [s for s in lista if s.dni != dni_limpio]
+    return eliminar_socios_multiples([dni], socios) > 0
 
-    if len(nueva_lista) < len(lista):
+
+def eliminar_socios_multiples(lista_dnis, socios=None):
+    """
+    Elimina múltiples socios de la lista a partir de una colección de DNIs.
+    Guarda los cambios persistidos en el archivo JSON.
+    Devuelve la cantidad de socios eliminados.
+    """
+    lista = socios if socios is not None else cargar_socios()
+    set_dnis = {str(d).strip() for d in lista_dnis}
+    nueva_lista = [s for s in lista if s.dni not in set_dnis]
+    eliminados = len(lista) - len(nueva_lista)
+
+    if eliminados > 0:
         guardar_socios(nueva_lista)
-        return True
-    return False
+    return eliminados
 
 
 def actualizar_socio(dni_original, datos_actualizados):

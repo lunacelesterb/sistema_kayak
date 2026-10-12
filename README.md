@@ -10,7 +10,7 @@ Trabajo Integrador Final (TIF) desarrollado en **Python** con interfaz gráfica 
    - Turnos asignados (**Mañana** y **Tarde**).
    - Control de Apto Médico: obligatorio para Natación y Ambas actividades.
    - **Modificación y Edición:** Posibilidad de editar los datos de cualquier alumno (nombre, apellido, fecha de nacimiento, actividad, turno, apto médico y estado Activo/Inactivo).
-   - **Eliminación Segura:** Baja definitiva de alumnos con cuadro de confirmación.
+   - **Eliminación Individual y Múltiple:** Baja de alumnos (individual o en bloque seleccionando varios con Ctrl/Shift o el botón de seleccionar todos) con diálogo de confirmación detallado.
 
 2. **Control Inteligente de Cuotas basado en Fechas:**
    - **Al día:** Cuota del mes corriente abonada.

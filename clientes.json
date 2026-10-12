@@ -44,5 +44,28 @@
                 "monto": 15000.0
             }
         ]
+    },
+    {
+        "dni": "38451526",
+        "nombre": "Ailen Sabrina",
+        "apellido": "Morrone",
+        "fecha_de_nacimiento": "09/09/1994",
+        "clase": "Ambas",
+        "turno": "Mañana",
+        "apto_medico": true,
+        "estado": "Activo",
+        "cuota_al_dia": true,
+        "mes_abonado": "10/2026",
+        "dia_pago": 12,
+        "periodo_abonado": "10/2026",
+        "fecha_pago": "12/10/2026",
+        "monto_ultimo_pago": 28000.0,
+        "historial_pagos": [
+            {
+                "periodo": "10/2026",
+                "fecha_pago": "12/10/2026",
+                "monto": 28000.0
+            }
+        ]
     }
 ]

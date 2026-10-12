@@ -11,6 +11,7 @@ from logica import (
     cargar_socios,
     buscar_socio,
     eliminar_socio,
+    eliminar_socios_multiples,
     calcular_estadisticas,
     calcular_recaudacion_mes,
     filtrar_socios,
@@ -105,7 +106,7 @@ def abrir(root, callback_actualizar=None):
     frame_tabla.pack(fill="both", expand=True, padx=4, pady=4)
 
     columnas = ("dni", "nombre", "clase", "turno", "estado_cuota", "periodo", "apto", "estado")
-    tabla = ttk.Treeview(frame_tabla, columns=columnas, show="headings", height=12)
+    tabla = ttk.Treeview(frame_tabla, columns=columnas, show="headings", height=12, selectmode="extended")
 
     tabla.heading("dni", text="DNI")
     tabla.heading("nombre", text="Apellido y Nombre")
@@ -169,73 +170,131 @@ def abrir(root, callback_actualizar=None):
     entry_busqueda.bind("<KeyRelease>", cargar_datos_tabla)
 
     # ----------------------------------------------------
-    # 4. Operaciones sobre Alumnos: Modificar y Eliminar
+    # 4. Operaciones sobre Alumnos: Modificar y Borrado Múltiple
     # ----------------------------------------------------
     frame_gestion = ttk.Frame(contenedor, padding=4)
     frame_gestion.pack(fill="x", padx=4, pady=2)
 
-    def obtener_socio_seleccionado():
+    def obtener_socios_seleccionados():
+        """Devuelve una lista de objetos Socio correspondientes a las filas seleccionadas."""
         seleccion = tabla.selection()
         if not seleccion:
             messagebox.showwarning(
-                "Seleccionar Alumno",
-                "Por favor, seleccione un alumno de la tabla haciendo un clic sobre su fila.",
+                "Seleccionar Alumno(s)",
+                "Por favor, seleccione al menos un alumno de la tabla.\n\n"
+                "Tip: Puede mantener presionada la tecla Ctrl o Shift y hacer clic sobre varios alumnos para seleccionarlos a la vez.",
                 parent=ventana
             )
-            return None
-        item = tabla.item(seleccion[0])
-        dni = str(item["values"][0]).strip()
+            return []
+
         socios = cargar_socios()
-        return buscar_socio(dni, socios)
+        socios_dict = {str(s.dni).strip(): s for s in socios}
+        resultado = []
+
+        for item_id in seleccion:
+            item = tabla.item(item_id)
+            dni = str(item["values"][0]).strip()
+            if dni in socios_dict:
+                resultado.append(socios_dict[dni])
+
+        return resultado
 
     def modificar_alumno():
-        socio = obtener_socio_seleccionado()
-        if socio:
-            def refrescar_todo():
-                cargar_datos_tabla()
-                if callback_actualizar:
-                    callback_actualizar()
-            pantalla_edicion.abrir(ventana, socio, callback_actualizar=refrescar_todo)
-
-    def eliminar_alumno():
-        socio = obtener_socio_seleccionado()
-        if not socio:
+        seleccionados = obtener_socios_seleccionados()
+        if not seleccionados:
             return
 
+        if len(seleccionados) > 1:
+            messagebox.showinfo(
+                "Modificación Individual",
+                "Para modificar datos, por favor seleccione un único alumno a la vez.",
+                parent=ventana
+            )
+            return
+
+        socio = seleccionados[0]
+        def refrescar_todo():
+            cargar_datos_tabla()
+            if callback_actualizar:
+                callback_actualizar()
+        pantalla_edicion.abrir(ventana, socio, callback_actualizar=refrescar_todo)
+
+    def eliminar_alumnos_seleccionados():
+        seleccionados = obtener_socios_seleccionados()
+        if not seleccionados:
+            return
+
+        cant = len(seleccionados)
+
+        # Diálogo de confirmación personalizado si es 1 o varios
+        if cant == 1:
+            socio = seleccionados[0]
+            pregunta = (
+                f"¿Está seguro de que desea eliminar al alumno:\n\n"
+                f"• Nombre: {socio.nombre} {socio.apellido}\n"
+                f"• DNI: {socio.dni}\n"
+                f"• Actividad: {socio.clase} (Turno: {socio.turno})\n\n"
+                f"Esta acción borrará definitivamente sus registros."
+            )
+            titulo_alerta = "Confirmar Eliminación"
+        else:
+            # Resumen de nombres para confirmar eliminación múltiple
+            lineas_socios = [f"• {s.nombre} {s.apellido} (DNI: {s.dni} - {s.clase})" for s in seleccionados[:6]]
+            texto_lista = "\n".join(lineas_socios)
+            if cant > 6:
+                texto_lista += f"\n... y {cant - 6} alumnos más."
+
+            pregunta = (
+                f"¿Está seguro de que desea eliminar a los {cant} alumnos seleccionados?\n\n"
+                f"Alumnos a eliminar:\n{texto_lista}\n\n"
+                f"Esta acción borrará definitivamente los registros de todos ellos."
+            )
+            titulo_alerta = f"Confirmar Eliminación Múltiple ({cant} Alumnos)"
+
         confirmado = messagebox.askyesno(
-            "Confirmar Eliminación",
-            f"¿Está seguro de que desea eliminar al alumno:\n\n"
-            f"• Nombre: {socio.nombre} {socio.apellido}\n"
-            f"• DNI: {socio.dni}\n"
-            f"• Actividad: {socio.clase} (Turno: {socio.turno})\n\n"
-            f"Esta acción borrará definitivamente sus registros.",
+            titulo_alerta,
+            pregunta,
             parent=ventana
         )
 
         if confirmado:
-            eliminar_socio(socio.dni)
+            dnis = [s.dni for s in seleccionados]
+            cant_eliminados = eliminar_socios_multiples(dnis)
             messagebox.showinfo(
-                "Alumno Eliminado",
-                f"El alumno {socio.nombre} {socio.apellido} fue eliminado correctamente.",
+                "Eliminación Exitosa",
+                f"Se {'eliminaron' if cant_eliminados > 1 else 'eliminó'} correctamente a {cant_eliminados} {'alumnos' if cant_eliminados > 1 else 'alumno'}.",
                 parent=ventana
             )
             cargar_datos_tabla()
             if callback_actualizar:
                 callback_actualizar()
 
-    # Botones para modificar y eliminar
-    btn_modificar = ttk.Button(frame_gestion, text="✏️ Modificar Alumno Seleccionado", command=modificar_alumno)
-    btn_modificar.pack(side="left", padx=5)
+    def seleccionar_todos():
+        todos = tabla.get_children()
+        tabla.selection_set(todos)
 
-    btn_eliminar = ttk.Button(frame_gestion, text="🗑️ Eliminar Alumno Seleccionado", command=eliminar_alumno)
-    btn_eliminar.pack(side="left", padx=5)
+    def deseleccionar_todos():
+        tabla.selection_remove(tabla.selection())
+
+    # Botones principales de gestión
+    btn_modificar = ttk.Button(frame_gestion, text="✏️ Modificar Alumno", command=modificar_alumno)
+    btn_modificar.pack(side="left", padx=4)
+
+    btn_eliminar = ttk.Button(frame_gestion, text="🗑️ Eliminar Alumno(s) Seleccionado(s)", command=eliminar_alumnos_seleccionados)
+    btn_eliminar.pack(side="left", padx=4)
+
+    btn_sel_todos = ttk.Button(frame_gestion, text="☑️ Seleccionar Todos", command=seleccionar_todos)
+    btn_sel_todos.pack(side="left", padx=4)
+
+    btn_desel = ttk.Button(frame_gestion, text="⬜ Deseleccionar", command=deseleccionar_todos)
+    btn_desel.pack(side="left", padx=4)
 
     ttk.Label(
         frame_gestion,
-        text="(Tip: También podés hacer doble clic sobre un alumno para modificarlo)",
+        text="(Ctrl + Clic o Shift + Clic para seleccionar múltiples)",
         font=("Segoe UI", 8, "italic"),
         foreground="#666666"
-    ).pack(side="left", padx=10)
+    ).pack(side="left", padx=8)
 
     # Atajo: Doble clic en cualquier fila para modificar
     tabla.bind("<Double-1>", lambda event: modificar_alumno())
