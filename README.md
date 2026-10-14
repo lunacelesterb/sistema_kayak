@@ -17,10 +17,12 @@ Trabajo Integrador Final (TIF) desarrollado en **Python** con interfaz gráfica 
    - **Pendiente (Vence el día 10):** Del día 1 al 10 del mes en curso para los socios que aún no pagaron. Permite emitir listados de recordatorio preventivo (por ejemplo, el día 9).
    - **Atrasado / Moroso:** A partir del día 11 si el socio no regularizó el pago.
    - Registro de cobro con fecha real y período mensual correspondiente.
+   - Configuración de importes de aranceles desde la interfaz gráfica.
 
-3. **Consultas y Métricas en Tiempo Real:**
-   - Tabla interactiva (`ttk.Treeview`) para consultar todos los alumnos.
-   - Filtros rápidos: *Para avisar (Sin pago este mes)*, *Atrasados*, *Al día* y *Aptos pendientes*.
+3. **Consultas, Recaudación y Métricas en Tiempo Real:**
+   - Tabla interactiva (`ttk.Treeview`) para consultar todos los alumnos con buscador por DNI o Nombre.
+   - Filtros rápidos: *Para avisar (Sin pago este mes)*, *Atrasados*, *Al día*, *Aptos pendientes* y por *Turno*.
+   - Cálculo en tiempo real de la recaudación mensual en cuotas.
    - Resumen numérico en la ventana principal al iniciar el sistema.
 
 4. **Reportes en PDF (`fpdf2`):**
@@ -33,8 +35,12 @@ Trabajo Integrador Final (TIF) desarrollado en **Python** con interfaz gráfica 
 - `logica.py`: Capa de persistencia en `clientes.json`, filtros de cobranza, estadísticas y reportes PDF con `fpdf2`.
 - `main.py`: Ventana principal con barra de menús desplegables (`tk.Menu`), estilos `ttk` y tarjeta de resumen inicial.
 - `pantalla_clientes.py`: Formulario con validaciones para registro de nuevos socios.
+- `pantalla_edicion.py`: Formulario modal para modificar los datos de alumnos existentes con precarga automática.
 - `pantalla_renovacion.py`: Módulo para buscar socio y registrar cobro de cuota con fecha real.
-- `pantalla_estadisticas.py`: Panel visual de consultas con tabla `ttk.Treeview` y descarga de reportes.
+- `pantalla_estadisticas.py`: Panel visual de consultas con tabla `ttk.Treeview`, borrado múltiple y descarga de reportes.
+- `pantalla_precios.py`: Ventana para modificar los aranceles de cuotas mensuales de cada actividad.
+- `clientes.json`: Archivo local de persistencia con los datos de los alumnos e historial de pagos.
+- `precios.json`: Archivo de configuración con los importes vigentes de las cuotas.
 
 ## 🚀 Requisitos y Ejecución
 
@@ -42,8 +48,3 @@ Trabajo Integrador Final (TIF) desarrollado en **Python** con interfaz gráfica 
 - Librería `fpdf2`:
   ```bash
   pip install fpdf2
-  ```
-- Para iniciar el programa:
-  ```bash
-  python main.py
-  ```
