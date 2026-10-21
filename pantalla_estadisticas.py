@@ -1,53 +1,99 @@
 """
-Módulo de Interfaz Gráfica - Consultas, Estadísticas, Edición y Reportes
-Permite buscar alumnos por DNI o Nombre, modificar sus datos, eliminarlos,
-filtrar por turnos y situaciones de pago, consultar recaudación y exportar reportes en PDF.
+================================================================================
+ARCHIVO: pantalla_estadisticas.py (Panel de Consultas, Tabla, Gestión y Reportes PDF)
+================================================================================
+
+1. PROPÓSITO GENERAL:
+   Es el panel de control administrativo completo del club. Permite ver las métricas
+   generales y el dinero recaudado en el mes, buscar alumnos en tiempo real a medida
+   que se escribe, filtrar el listado por categoría (para avisar, atrasados, al día,
+   apto pendiente o turnos), editar a un alumno, eliminar a uno o varios alumnos al
+   mismo tiempo y descargar los reportes institucionales en formato PDF.
+
+2. ELEMENTOS VISUALES / INTERFAZ:
+   - Ventana Secundaria ('ventana = tk.Toplevel'): Mide 960x680 píxeles (mínimo 850x590),
+     redimensionable y con imagen 'fondo.jpg' difuminada de fondo.
+   - Botón Conmutador de Tema (🌙 / ☀️): Ubicado arriba a la derecha.
+   - Tarjeta 1 (" 📊 Resumen del Club y Recaudación Mensual "): Muestra 3 renglones
+     con totales por disciplina, por turno e ingresos en pesos del mes.
+   - Tarjeta 2 (" 🔍 Búsqueda y Filtros "):
+     * Caja de texto ('entry_busqueda' de ancho 20) que filtra instantáneamente al soltar
+       cada tecla ('<KeyRelease>').
+     * Desplegable ('combo_filtro' de ancho 28) con 7 filtros rápidos.
+     * Botón "Limpiar Filtros".
+   - Tarjeta 3 (" 📋 Nómina de Alumnos y Acciones "):
+     * Tabla Interactiva ('tabla = ttk.Treeview'): Tiene 8 columnas, encabezado en color
+       Azul Glicina (#779be7), selección en Cielo Fresco (#49b6ff) y soporte para elegir
+       múltiples filas con Ctrl o Shift ('selectmode="extended"').
+     * Botonera de gestión: "✏️ Modificar Alumno", "🗑️ Eliminar Alumno(s) Seleccionado(s)",
+       "☑️ Seleccionar Todos" y "⬜ Deseleccionar".
+     * Botonera de exportación PDF: "📄 Descargar Reporte General (PDF)",
+       "⚠️ Descargar Listado de Cobranzas y Avisos (PDF)" y "Cerrar".
+
+3. EXPLICACIÓN LÍNEA POR LÍNEA:
+   Cada bloque e instrucción está explicado en lenguaje llano debajo.
+================================================================================
 """
+
+# Aquí importamos 'tkinter', 'ttk' y 'messagebox' para construir el panel visual
 import tkinter as tk
 from tkinter import ttk, messagebox
+# Aquí importamos 'os' para abrir automáticamente el archivo PDF recién generado en Windows
 import os
+# Aquí importamos 'date' para consultar el mes y año actual en el cálculo de recaudación
 from datetime import date
+# Aquí importamos todas las funciones de consulta, baja múltiple, PDFs y diseño desde 'logica.py'
 from logica import (
     cargar_socios,
-    buscar_socio,
-    eliminar_socio,
     eliminar_socios_multiples,
     calcular_estadisticas,
     calcular_recaudacion_mes,
     filtrar_socios,
     generar_reporte_pdf,
-    generar_reporte_avisos_pdf
+    generar_reporte_avisos_pdf,
+    configurar_estilos_modernos,
+    crear_boton_tema
 )
+# Aquí importamos 'pantalla_edicion' para poder abrirla cuando se quiera modificar a un alumno
 import pantalla_edicion
 
 
 def abrir(root, callback_actualizar=None):
     """
-    Abre la ventana de consultas avanzadas, gestión completa (modificar/eliminar) y reportes.
+    Construye y muestra el panel general de consultas, tabla interactiva y reportes PDF.
     """
+    # Aquí se crea la ventana secundaria amplia (960x680 píxeles)
     ventana = tk.Toplevel(root)
     ventana.title("Panel de Consultas, Gestión de Alumnos y Reportes - Sistema Náutico")
-    ventana.geometry("900x620")
-    ventana.minsize(800, 540)
+    ventana.geometry("960x680")
+    ventana.minsize(850, 590)
 
-    contenedor = ttk.Frame(ventana, padding=12)
-    contenedor.pack(fill="both", expand=True)
+    # Aquí se aplica el fondo difuminado, la paleta de tonos azules y los efectos de botones
+    configurar_estilos_modernos(ventana)
+    # Aquí se coloca arriba a la derecha el botón 🌙 / ☀️ para alternar entre Modo Día y Modo Noche
+    crear_boton_tema(ventana, padx=16, pady=(8, 2))
 
     # ----------------------------------------------------
-    # 1. Resumen de Métricas e Ingresos por Mes
+    # 1. Tarjeta de Resumen de Métricas e Ingresos por Mes
     # ----------------------------------------------------
-    frame_kpi = ttk.LabelFrame(contenedor, text=" Resumen del Club y Recaudación Mensual ", padding=8)
-    frame_kpi.pack(fill="x", padx=4, pady=4)
+    frame_kpi = ttk.LabelFrame(ventana, text=" 📊 Resumen del Club y Recaudación Mensual ", padding=10)
+    frame_kpi.pack(fill="x", padx=16, pady=4)
 
-    lbl_kpi_alumnos = ttk.Label(frame_kpi, text="", font=("Segoe UI", 9))
+    # Tres etiquetas para mostrar los indicadores clave del club
+    lbl_kpi_alumnos = ttk.Label(frame_kpi, text="", style="Card.TLabel")
     lbl_kpi_alumnos.pack(anchor="w", pady=1)
 
-    lbl_kpi_turnos = ttk.Label(frame_kpi, text="", font=("Segoe UI", 9))
+    lbl_kpi_turnos = ttk.Label(frame_kpi, text="", style="Card.TLabel")
     lbl_kpi_turnos.pack(anchor="w", pady=1)
 
-    lbl_kpi_dinero = ttk.Label(frame_kpi, text="", font=("Segoe UI", 9, "bold"), foreground="#1b365d")
-    lbl_kpi_dinero.pack(anchor="w", pady=(2, 0))
+    lbl_kpi_dinero = ttk.Label(
+        frame_kpi,
+        text="",
+        style="Accent.Card.TLabel"
+    )
+    lbl_kpi_dinero.pack(anchor="w", pady=(3, 0))
 
+    # Función que recalcula y escribe los totales en las 3 etiquetas superiores
     def actualizar_tarjetas(socios):
         stats = calcular_estadisticas(socios)
         hoy = date.today()
@@ -69,16 +115,17 @@ def abrir(root, callback_actualizar=None):
         )
 
     # ----------------------------------------------------
-    # 2. Barra de Búsqueda por Nombre/DNI y Filtros
+    # 2. Tarjeta de Búsqueda en Vivo y Filtros Rápidos
     # ----------------------------------------------------
-    frame_filtros = ttk.LabelFrame(contenedor, text=" Búsqueda y Filtros ", padding=6)
-    frame_filtros.pack(fill="x", padx=4, pady=4)
+    frame_filtros = ttk.LabelFrame(ventana, text=" 🔍 Búsqueda y Filtros ", padding=8)
+    frame_filtros.pack(fill="x", padx=16, pady=4)
 
-    ttk.Label(frame_filtros, text="Buscar (DNI o Nombre):").pack(side="left", padx=(4, 2))
-    entry_busqueda = ttk.Entry(frame_filtros, width=18)
-    entry_busqueda.pack(side="left", padx=(0, 10))
+    ttk.Label(frame_filtros, text="Buscar (DNI o Nombre):", style="Card.TLabel").pack(side="left", padx=(4, 4))
+    entry_busqueda = ttk.Entry(frame_filtros, width=20)
+    entry_busqueda.pack(side="left", padx=(0, 12))
 
-    ttk.Label(frame_filtros, text="Filtrar por:").pack(side="left", padx=(4, 2))
+    ttk.Label(frame_filtros, text="Filtrar por:", style="Card.TLabel").pack(side="left", padx=(4, 4))
+    # Lista con las 7 opciones de filtrado disponibles
     opciones_filtro = [
         "Todos los socios",
         "Para avisar (Sin pago este mes)",
@@ -92,6 +139,7 @@ def abrir(root, callback_actualizar=None):
     combo_filtro.pack(side="left", padx=4)
     combo_filtro.current(0)
 
+    # Botón que borra el texto buscado, vuelve el filtro a "Todos los socios" y recarga la tabla
     btn_limpiar = ttk.Button(
         frame_filtros,
         text="Limpiar Filtros",
@@ -100,14 +148,20 @@ def abrir(root, callback_actualizar=None):
     btn_limpiar.pack(side="left", padx=8)
 
     # ----------------------------------------------------
-    # 3. Tabla Interactiva de Alumnos (ttk.Treeview)
+    # 3. Tarjeta de Tabla Interactiva (ttk.Treeview) y Acciones
     # ----------------------------------------------------
-    frame_tabla = ttk.Frame(contenedor)
-    frame_tabla.pack(fill="both", expand=True, padx=4, pady=4)
+    frame_panel_tabla = ttk.LabelFrame(ventana, text=" 📋 Nómina de Alumnos y Acciones ", padding=10)
+    frame_panel_tabla.pack(fill="both", expand=True, padx=16, pady=(4, 14))
 
+    frame_tabla = ttk.Frame(frame_panel_tabla, style="Card.TFrame")
+    frame_tabla.pack(fill="both", expand=True, pady=(0, 6))
+
+    # Aquí se definen los nombres internos de las 8 columnas de la tabla
     columnas = ("dni", "nombre", "clase", "turno", "estado_cuota", "periodo", "apto", "estado")
-    tabla = ttk.Treeview(frame_tabla, columns=columnas, show="headings", height=12, selectmode="extended")
+    # 'show="headings"' muestra solo nuestras columnas con título; 'selectmode="extended"' permite elegir varias filas
+    tabla = ttk.Treeview(frame_tabla, columns=columnas, show="headings", height=11, selectmode="extended")
 
+    # Aquí se definen los títulos visibles en el encabezado de cada columna
     tabla.heading("dni", text="DNI")
     tabla.heading("nombre", text="Apellido y Nombre")
     tabla.heading("clase", text="Actividad")
@@ -117,31 +171,38 @@ def abrir(root, callback_actualizar=None):
     tabla.heading("apto", text="Apto Médico")
     tabla.heading("estado", text="Estado")
 
+    # Aquí se define el ancho en píxeles y la alineación ("center" = centrado, "w" = izquierda) de cada columna
     tabla.column("dni", width=80, anchor="center")
-    tabla.column("nombre", width=175, anchor="w")
+    tabla.column("nombre", width=180, anchor="w")
     tabla.column("clase", width=95, anchor="center")
     tabla.column("turno", width=80, anchor="center")
-    tabla.column("estado_cuota", width=140, anchor="center")
+    tabla.column("estado_cuota", width=145, anchor="center")
     tabla.column("periodo", width=90, anchor="center")
     tabla.column("apto", width=95, anchor="center")
     tabla.column("estado", width=80, anchor="center")
 
+    # Barra de desplazamiento vertical conectada a la tabla
     scroll_y = ttk.Scrollbar(frame_tabla, orient="vertical", command=tabla.yview)
     tabla.configure(yscrollcommand=scroll_y.set)
     tabla.pack(side="left", fill="both", expand=True)
     scroll_y.pack(side="right", fill="y")
 
+    # Función que vacía la tabla y la vuelve a llenar según el texto buscado y el filtro elegido
     def cargar_datos_tabla(event=None):
+        # 1. Borramos todos los renglones actuales de la tabla visual para no duplicarlos
         for item in tabla.get_children():
             tabla.delete(item)
 
+        # 2. Leemos los socios desde 'clientes.json' y actualizamos la tarjeta superior
         socios = cargar_socios()
         actualizar_tarjetas(socios)
 
+        # 3. Aplicamos el buscador y el filtro seleccionados
         texto = entry_busqueda.get()
         filtro = combo_filtro.get()
         socios_filtrados = filtrar_socios(texto_busqueda=texto, filtro_estado=filtro, socios=socios)
 
+        # 4. Insertamos cada socio filtrado como una fila nueva en la tabla
         for s in socios_filtrados:
             nombre_completo = f"{s.apellido}, {s.nombre}"
             estado_cuota = s.obtener_estado_cuota()
@@ -166,17 +227,23 @@ def abrir(root, callback_actualizar=None):
                 )
             )
 
+    # Aquí conectamos los filtros en tiempo real:
+    # '<<ComboboxSelected>>' recarga la tabla al cambiar el filtro desplegable
     combo_filtro.bind("<<ComboboxSelected>>", cargar_datos_tabla)
+    # '<KeyRelease>' recarga la tabla instantáneamente cada vez que el usuario escribe una letra en el buscador
     entry_busqueda.bind("<KeyRelease>", cargar_datos_tabla)
 
     # ----------------------------------------------------
     # 4. Operaciones sobre Alumnos: Modificar y Borrado Múltiple
     # ----------------------------------------------------
-    frame_gestion = ttk.Frame(contenedor, padding=4)
-    frame_gestion.pack(fill="x", padx=4, pady=2)
+    frame_gestion = ttk.Frame(frame_panel_tabla, style="Card.TFrame")
+    frame_gestion.pack(fill="x", pady=4)
 
     def obtener_socios_seleccionados():
-        """Devuelve una lista de objetos Socio correspondientes a las filas seleccionadas."""
+        """
+        Revisa qué filas de la tabla están pintadas/seleccionadas por el usuario
+        y devuelve la lista de objetos 'Socio' correspondientes.
+        """
         seleccion = tabla.selection()
         if not seleccion:
             messagebox.showwarning(
@@ -199,11 +266,13 @@ def abrir(root, callback_actualizar=None):
 
         return resultado
 
+    # Aquí se maneja lo que pasa cuando el usuario hace clic en "✏️ Modificar Alumno" (o doble clic en la tabla):
     def modificar_alumno():
         seleccionados = obtener_socios_seleccionados()
         if not seleccionados:
             return
 
+        # Solo se puede editar 1 alumno por vez
         if len(seleccionados) > 1:
             messagebox.showinfo(
                 "Modificación Individual",
@@ -217,8 +286,10 @@ def abrir(root, callback_actualizar=None):
             cargar_datos_tabla()
             if callback_actualizar:
                 callback_actualizar()
+        # Abrimos la ventana 'pantalla_edicion.py' pasándole el socio seleccionado
         pantalla_edicion.abrir(ventana, socio, callback_actualizar=refrescar_todo)
 
+    # Aquí se maneja lo que pasa cuando el usuario hace clic en "🗑️ Eliminar Alumno(s) Seleccionado(s)":
     def eliminar_alumnos_seleccionados():
         seleccionados = obtener_socios_seleccionados()
         if not seleccionados:
@@ -226,7 +297,7 @@ def abrir(root, callback_actualizar=None):
 
         cant = len(seleccionados)
 
-        # Diálogo de confirmación personalizado si es 1 o varios
+        # Armamos la pregunta de confirmación según si se va a borrar a 1 solo alumno o a varios en bloque
         if cant == 1:
             socio = seleccionados[0]
             pregunta = (
@@ -238,7 +309,6 @@ def abrir(root, callback_actualizar=None):
             )
             titulo_alerta = "Confirmar Eliminación"
         else:
-            # Resumen de nombres para confirmar eliminación múltiple
             lineas_socios = [f"• {s.nombre} {s.apellido} (DNI: {s.dni} - {s.clase})" for s in seleccionados[:6]]
             texto_lista = "\n".join(lineas_socios)
             if cant > 6:
@@ -251,12 +321,14 @@ def abrir(root, callback_actualizar=None):
             )
             titulo_alerta = f"Confirmar Eliminación Múltiple ({cant} Alumnos)"
 
+        # Mostramos el cuadro de confirmación Sí / No
         confirmado = messagebox.askyesno(
             titulo_alerta,
             pregunta,
             parent=ventana
         )
 
+        # Si el usuario confirma que Sí, borramos esos DNIs de 'clientes.json' y refrescamos la pantalla
         if confirmado:
             dnis = [s.dni for s in seleccionados]
             cant_eliminados = eliminar_socios_multiples(dnis)
@@ -269,6 +341,7 @@ def abrir(root, callback_actualizar=None):
             if callback_actualizar:
                 callback_actualizar()
 
+    # Funciones para pintar o despintar todas las filas de la tabla con un solo clic
     def seleccionar_todos():
         todos = tabla.get_children()
         tabla.selection_set(todos)
@@ -276,7 +349,7 @@ def abrir(root, callback_actualizar=None):
     def deseleccionar_todos():
         tabla.selection_remove(tabla.selection())
 
-    # Botones principales de gestión
+    # Botones de acción sobre la tabla
     btn_modificar = ttk.Button(frame_gestion, text="✏️ Modificar Alumno", command=modificar_alumno)
     btn_modificar.pack(side="left", padx=4)
 
@@ -292,21 +365,22 @@ def abrir(root, callback_actualizar=None):
     ttk.Label(
         frame_gestion,
         text="(Ctrl + Clic o Shift + Clic para seleccionar múltiples)",
-        font=("Segoe UI", 8, "italic"),
-        foreground="#666666"
+        style="Muted.Card.TLabel"
     ).pack(side="left", padx=8)
 
-    # Atajo: Doble clic en cualquier fila para modificar
+    # Permite abrir la edición haciendo doble clic izquierdo ("<Double-1>") sobre cualquier fila
     tabla.bind("<Double-1>", lambda event: modificar_alumno())
 
+    # Llenamos la tabla al abrir la ventana
     cargar_datos_tabla()
 
     # ----------------------------------------------------
     # 5. Botones de Exportación PDF y Cierre
     # ----------------------------------------------------
-    frame_acciones = ttk.Frame(contenedor, padding=6)
-    frame_acciones.pack(fill="x", padx=4, pady=4)
+    frame_acciones = ttk.Frame(frame_panel_tabla, style="Card.TFrame")
+    frame_acciones.pack(fill="x", pady=(6, 0))
 
+    # Aquí se maneja la descarga y apertura automática del Reporte General en PDF
     def exportar_general():
         socios = cargar_socios()
         if not socios:
@@ -318,11 +392,13 @@ def abrir(root, callback_actualizar=None):
             f"El Reporte General en PDF se guardó en:\n{ruta}",
             parent=ventana
         )
+        # 'os.startfile(ruta)' abre automáticamente el PDF en el visor de documentos de Windows
         try:
             os.startfile(ruta)
         except Exception:
             pass
 
+    # Aquí se maneja la descarga y apertura del Listado de Cobranzas y Avisos en PDF
     def exportar_avisos():
         socios = cargar_socios()
         if not socios:
@@ -340,10 +416,10 @@ def abrir(root, callback_actualizar=None):
             pass
 
     btn_pdf_gral = ttk.Button(frame_acciones, text="📄 Descargar Reporte General (PDF)", command=exportar_general)
-    btn_pdf_gral.pack(side="left", padx=5)
+    btn_pdf_gral.pack(side="left", padx=4)
 
     btn_pdf_avisos = ttk.Button(frame_acciones, text="⚠️ Descargar Listado de Cobranzas y Avisos (PDF)", command=exportar_avisos)
-    btn_pdf_avisos.pack(side="left", padx=5)
+    btn_pdf_avisos.pack(side="left", padx=4)
 
     btn_cerrar = ttk.Button(frame_acciones, text="Cerrar", command=ventana.destroy)
-    btn_cerrar.pack(side="right", padx=5)
+    btn_cerrar.pack(side="right", padx=4)

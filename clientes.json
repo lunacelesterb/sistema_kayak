@@ -1,0 +1,76 @@
+[
+    {
+        "dni": "37153607",
+        "nombre": "Luna Celeste",
+        "apellido": "Ruiz Baleani",
+        "fecha_de_nacimiento": "16/01/1993",
+        "clase": "Natación",
+        "turno": "Tarde",
+        "apto_medico": false,
+        "estado": "Activo",
+        "cuota_al_dia": false,
+        "mes_abonado": "",
+        "dia_pago": 0,
+        "periodo_abonado": "",
+        "fecha_pago": "",
+        "monto_ultimo_pago": 0.0,
+        "historial_pagos": []
+    },
+    {
+        "dni": "37153608",
+        "nombre": "Luna",
+        "apellido": "Ruiz",
+        "fecha_de_nacimiento": "16/01/1993",
+        "clase": "Kayak",
+        "turno": "Mañana",
+        "apto_medico": false,
+        "estado": "Activo",
+        "cuota_al_dia": true,
+        "mes_abonado": "10/2026",
+        "dia_pago": 20,
+        "periodo_abonado": "10/2026",
+        "fecha_pago": "20/10/2026",
+        "monto_ultimo_pago": 15000.0,
+        "historial_pagos": [
+            {
+                "periodo": "10/2026",
+                "fecha_pago": "20/10/2026",
+                "monto": 15000.0
+            }
+        ]
+    },
+    {
+        "dni": "31452162",
+        "nombre": "Alan",
+        "apellido": "Gonzalez",
+        "fecha_de_nacimiento": "01/01/2000",
+        "clase": "Ambas",
+        "turno": "Mañana",
+        "apto_medico": true,
+        "estado": "Activo",
+        "cuota_al_dia": false,
+        "mes_abonado": "",
+        "dia_pago": 0,
+        "periodo_abonado": "",
+        "fecha_pago": "",
+        "monto_ultimo_pago": 0.0,
+        "historial_pagos": []
+    },
+    {
+        "dni": "54125125",
+        "nombre": "Lucas",
+        "apellido": "Perez",
+        "fecha_de_nacimiento": "01/01/2015",
+        "clase": "Kayak",
+        "turno": "Mañana",
+        "apto_medico": false,
+        "estado": "Activo",
+        "cuota_al_dia": false,
+        "mes_abonado": "",
+        "dia_pago": 0,
+        "periodo_abonado": "",
+        "fecha_pago": "",
+        "monto_ultimo_pago": 0.0,
+        "historial_pagos": []
+    }
+]
